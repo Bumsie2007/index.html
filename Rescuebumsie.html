@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tondani's Rescue Mission</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #87CEEB;
+        }
+        canvas {
+            background-color: #333;
+            border: 2px solid #fff;
+        }
+        .game-info {
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+<div class="game-info">
+    <h1>Tondani's Rescue Mission</h1>
+    <p>Score: <span id="score">0</span></p>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Game variables
+    let characterWidth = 30;
+    let characterHeight = 30;
+    let characterX = canvas.width / 2 - characterWidth / 2;
+    let characterY = canvas.height - characterHeight - 10;
+    let rightPressed = false;
+    let leftPressed = false;
+    let score = 0;
+    let obstacles = [];
+    let obstacleFrequency = 100; // Higher is slower
+    let gameOver = false;
+
+    // Handle keyboard events
+    document.addEventListener('keydown', keyDownHandler);
+    document.addEventListener('keyup', keyUpHandler);
+
+    function keyDownHandler(event) {
+        if (event.key === 'Right' || event.key === 'ArrowRight') {
+            rightPressed = true;
+        } else if (event.key === 'Left' || event.key === 'ArrowLeft') {
+            leftPressed = true;
+        }
+    }
+
+    function keyUpHandler(event) {
+        if (event.key === 'Right' || event.key === 'ArrowRight') {
+            rightPressed = false;
+        } else if (event.key === 'Left' || event.key === 'ArrowLeft') {
+            leftPressed = false;
+        }
+    }
+
+    // Create a new obstacle
+    function createObstacle() {
+        const obstacleWidth = 30;
+        const obstacleHeight = 30;
+        const obstacleX = Math.random() * (canvas.width - obstacleWidth);
+        obstacles.push({ x: obstacleX, y: -obstacleHeight, width: obstacleWidth, height: obstacleHeight });
+    }
+
+    // Draw the character and obstacles
+    function drawCharacter() {
+        ctx.fillStyle = 'pink'; // Tondani's color
+        ctx.fillRect(characterX, characterY, characterWidth, characterHeight);
+    }
+
+    function drawObstacles() {
+        ctx.fillStyle = 'red'; // Obstacle color
+        obstacles.forEach(obstacle => {
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        });
+    }
+
+    // Collision detection
+    function collisionDetection() {
+        for (let i = 0; i < obstacles.length; i++) {
+            const o = obstacles[i];
+            if (characterX < o.x + o.width && characterX + characterWidth > o.x && characterY < o.y + o.height && characterY + characterHeight > o.y) {
+                gameOver = true;
+            }
+        }
+    }
+
+    // Update the game
+    function update() {
+        if (gameOver) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '30px Arial';
+            ctx.fillText("Game Over!", canvas.width / 2 - 70, canvas.height / 2);
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Move character
+        if (rightPressed && characterX < canvas.width - characterWidth) {
+            characterX += 5;
+        } else if (leftPressed && characterX > 0) {
+            characterX -= 5;
+        }
+
+        // Create obstacles at intervals
+        if (Math.floor(Math.random() * obstacleFrequency) === 0) {
+            createObstacle();
+        }
+
+        // Move obstacles
+        obstacles.forEach(obstacle => {
+            obstacle.y += 3; // Speed of the obstacles
+        });
+
+        // Remove obstacles that are off the screen
+        obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
+
+        // Draw everything
+        drawCharacter();
+        drawObstacles();
+        collisionDetection();
+
+        // Update score
+        score++;
+        document.getElementById('score').innerText = score;
+
+        requestAnimationFrame(update);
+    }
+
+    update(); // Start the game loop
+</script>
+
+</body>
+</html>
